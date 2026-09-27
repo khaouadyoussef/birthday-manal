@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Hobe Manal</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* Screens styling */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: opacity 1.5s ease-in-out, visibility 1.5s;
+        }
+
+        #screen1 {
+            z-index: 10;
+        }
+
+        #screen2 {
+            z-index: 5;
+            opacity: 0;
+            visibility: hidden;
+            background: radial-gradient(circle at center, #1b053a 0%, #050112 70%, #000000 100%);
+        }
+
+        /* Canvas container */
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #matrixCanvas { z-index: 1; }
+        #galaxyCanvas { z-index: 1; }
+
+        /* Centered UI Overlay Layer */
+        .overlay-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        /* Neon Glow Common Styles */
+        .neon-text {
+            color: #fff;
+            text-shadow: 
+                0 0 5px #fff,
+                0 0 10px #ff007f,
+                0 0 20px #ff007f,
+                0 0 40px #ff007f,
+                0 0 80px #ff007f;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Phase 1: Countdown Styles */
+        #countdown {
+            font-size: 8rem;
+            display: block;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Phase 2 & 3: Message Text Styles */
+        #message-box {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .msg-line {
+            font-size: 3rem;
+            opacity: 0;
+            letter-spacing: 4px;
+            white-space: nowrap;
+        }
+
+        .typing {
+            border-right: 3px solid #ff007f;
+            animation: blink 0.6s step-end infinite alternate;
+        }
+
+        @keyframes blink {
+            50% { border-color: transparent }
+        }
+
+        /* GALAXY SCREEN INTERACTION elements */
+        .galaxy-ui {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px 20px;
+            transition: opacity 1s ease;
+        }
+
+        /* Book Element */
+        .book-container {
+            margin-top: auto; 
+            margin-bottom: 30px;
+            perspective: 1000px;
+            cursor: pointer;
+            z-index: 15;
+            transition: transform 0.5s ease;
+        }
+
+        .book-container:hover {
+            transform: scale(1.1);
+        }
+
+        .magic-book {
+            width: 120px;
+            height: 160px;
+            background: linear-gradient(135deg, #4a0e4e 0%, #2c0c30 100%);
+            border-radius: 4px 12px 12px 4px;
+            border-left: 8px solid #ff007f;
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.6), inset -2px 0 5px rgba(255,255,255,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .book-heart {
+            font-size: 2.5rem;
+            color: #ff007f;
+            text-shadow: 0 0 10px #ff007f;
+            animation: beat 1.2s infinite alternate ease-in-out;
+        }
+
+        @keyframes beat {
+            0% { transform: scale(0.9); opacity: 0.8; }
+            100% { transform: scale(1.15); opacity: 1; text-shadow: 0 0 20px #ff007f, 0 0 30px #ff66b2; }
+        }
+
+        .book-hint {
+            color: #ff66b2;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            text-shadow: 0 0 5px #000;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        /* Photos Album Overlay */
+        .album-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 2, 15, 0.85);
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .album-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 3D Photo Album Flip Container */
+        .album-container {
+            position: relative;
+            width: 320px;
+            height: 420px;
+            perspective: 1200px;
+            cursor: pointer;
+            transition: opacity 0.8s ease;
+        }
+
+        .photo-card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s;
+            transform-origin: left center;
+        }
+
+        .photo-card.hidden {
+            transform: rotateY(-180deg);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .photo-front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            padding: 15px;
+            padding-bottom: 50px; 
+            border-radius: 8px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .photo-front img, .photo-front video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            background-color: #eee;
+        }
+
+        .photo-caption {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: #333;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .close-album {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: 2px solid #ff007f;
+            color: #ff007f;
+            padding: 8px 16px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 20px;
+            font-family: monospace;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(255,0,127,0.3);
+            transition: all 0.3s;
+            z-index: 30;
+        }
+
+        .close-album:hover {
+            background: #ff007f;
+            color: #fff;
+            box-shadow: 0 0 20px #ff007f;
+        }
+
+        /* النص السحري داخل القلب الكوني */
+        #heartMessage {
+            position: absolute;
+            z-index: 3;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 2s ease, transform 2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            pointer-events: none;
+            width: 100%;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            #countdown { font-size: 5rem; }
+            .msg-line { font-size: 1.6rem; letter-spacing: 2px; }
+            .album-container { width: 280px; height: 380px; }
+            #heartMessage { font-size: 1.4rem; letter-spacing: 1px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="screen1" class="screen">
+        <canvas id="matrixCanvas"></canvas>
+        <div class="overlay-container">
+            <div id="countdown" class="neon-text"></div>
+            <div id="message-box">
+                <div id="line1" class="msg-line neon-text"></div>
+                <div id="line2" class="msg-line neon-text"></div>
+                <div id="line3" class="msg-line neon-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen2" class="screen">
+        <canvas id="galaxyCanvas"></canvas>
+        
+        <!-- الحاوية الخاصة بالنص المتوهج داخل القلب -->
+        <div class="overlay-container">
+            <h2 id="heartMessage" class="neon-text">Kanbgheeeek ahobee manal</h2>
+        </div>
+
+        <div id="galaxyUi" class="galaxy-ui">
+            <h2 class="neon-text" style="font-size: 2rem; margin-top: 20px; letter-spacing: 2px;">The best Picture of my prencess✨</h2>
+            
+            <div class="book-container" onclick="openAlbum()">
+                <div class="magic-book">
+                    <div class="book-heart">♥</div>
+                </div>
+                <div class="book-hint">Hobe Click to open the album 📖</div>
+            </div>
+        </div>
+
+        <div id="albumModal" class="album-modal">
+            <button class="close-album" onclick="handleClose(event)">Close ✕</button>
+            
+            <div id="mainAlbumContainer" class="album-container" onclick="nextPhoto()">
+                
+                <div class="photo-card" style="z-index: 11;">
+                    <div class="photo-front">
+                        <img src="pic1.jpeg" alt="صورة 1">
+                        <div class="photo-caption">My Girl 🧡</div>
+                    </div>
+                </div>
+                
+                <div class="photo-card" style="z-index: 10;">
+                    <div class="photo-front">
+                        <img src="pic2.jpeg" alt="صورة 2">
+                        <div class="photo-caption">💋</div>
+                    </div>
+                </div>
+
+                <div class="photo-card" style="z-index: 9;">
+                    <div class="photo-front">
+                        <img src="pic3.jpeg" alt="صورة 3">
+                        <div class="photo-caption">🦋</div>
+                    </div>
+                </div>
+
+                <div class="photo-card" style="z-index: 8;">
+                    <div class="photo-front">
+                        <img src="pic4.jpeg" alt="صورة 4">
+                        <div class="photo-caption">🌸🐄 </div>
+                    </div>
+                </div>
+
+                <div class="photo-card" style="z-index: 7;">
+                    <div class="photo-front">
+                        <img src="pic5.jpeg" alt="صورة 5">
+                        <div class="photo-caption">😋🍓</div>
+                    </div>
+                </div>
+
+                <div class="photo-card" style="z-index: 6;">
+                    <div class="photo-front">
+                        <img src="pic6.jpeg" alt="صورة 6">
+                        <div class="photo-caption">°˖✧🖤✧˖°</div>
+                    </div>
+                </div>
+
+                <div class="photo-card" style="z-index: 5;">
+                    <div class="photo-front">
+                        <img src="pic7.jpeg" alt="صورة 7">
+                        <div class="photo-caption">🖤🌙</div>
+                    </div>
+                </div>
+
+                <div class="photo-card" style="z-index: 4;">
+                    <div class="photo-front">
+                        <img src="pic8.jpeg" alt="صورة 8">
+                        <div class="photo-caption">♡₊˚ 🦢・₊✧</div>
+                    </div>
+                </div>
+
+                <div class="photo-card" style="z-index: 3;">
+                    <div class="photo-front">
+                        <img src="pic9.jpeg" alt="صورة 9">
+                        <div class="photo-caption">˖⁺‧₊˚♡˚₊‧⁺˖</div>
+                    </div>
+                </div>
+
+                <div class="photo-card" style="z-index: 2;">
+                    <div class="photo-front">
+                        <video src="vid.mp4" controls onclick="event.stopPropagation()"></video>
+                        <div class="photo-caption">˚.💙༘⋆</div>
+                    </div>
+                </div>
+
+                <div class="photo-card" style="z-index: 1;">
+                    <div class="photo-front" style="justify-content: center; align-items: center; background: #fff;">
+                        <div style="font-size: 1rem;">❤️</div>
+                        <div class="photo-caption" style="color: #000000; font-size: 1rem;">Happy birthday ya ahssen wajmaal wahane bnotaa fhad l3alam  lyoma kmlty 18Y wlakin f3winaty atb9ay dima sghiwra dyali lhmim9a kantmnaa l2a3wam jayin ykono hssen whssen wtb9ay dimaa farhanaa wana fakhoor biik wtaya9 feek atwsli lbzaf dlhwayaj zwenen wghdi nbghek dima tkoni lfo9 llfo9 whssen mn kolchii wfo9ma thtaji chi had habebek youssef aykon awle wahad ghdi tl9ayh fjnbak knty wghtb9ay ahssen haja w93at fhyatii lah ytwaal leyaa f3mreek wykhliik liyaaa wkanbgheeek bzaaaf bzaaf ana              
+                            😍❤️💋 </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- SCREEN SYSTEMS CONTROL ---
+        const s1 = document.getElementById('screen1');
+        const s2 = document.getElementById('screen2');
+        const galaxyUi = document.getElementById('galaxyUi');
+        const heartMessage = document.getElementById('heartMessage');
+
+        function transitionToGalaxy() {
+            s1.style.opacity = '0';
+            s1.style.visibility = 'hidden';
+            s2.style.opacity = '1';
+            s2.style.visibility = 'visible';
+            initGalaxy(); 
+        }
+
+        // --- MATRIX ENGINE CONFIGURATION ---
+        const matrixCanvas = document.getElementById('matrixCanvas');
+        const mCtx = matrixCanvas.getContext('2d');
+
+        function resizeMatrixCanvas() {
+            matrixCanvas.width = window.innerWidth;
+            matrixCanvas.height = window.innerHeight;
+        }
+        resizeMatrixCanvas();
+        window.addEventListener('resize', resizeMatrixCanvas);
+
+        const matrixChars = "HAPPYBIRTHDAY".split("");
+        const fontSize = 24; 
+        
+        let columns = Math.floor(matrixCanvas.width / fontSize);
+        let drops = [];
+        let speeds = [];
+        
+        function initDrops() {
+            columns = Math.floor(matrixCanvas.width / fontSize);
+            drops = [];
+            speeds = [];
+            for (let x = 0; x < columns; x++) {
+                drops[x] = Math.random() * -100;
+                speeds[x] = 0.4 + Math.random() * 0.8; 
+            }
+        }
+        initDrops();
+        window.addEventListener('resize', initDrops);
+
+        let currentPhase = 1; 
+        let heartPositions = new Set();
+
+        function isInsideHeart(x, y) {
+            const cx = matrixCanvas.width / 2;
+            const cy = matrixCanvas.height * 0.45; 
+            const scale = Math.min(matrixCanvas.width, matrixCanvas.height) * 0.022; 
+
+            const nx = (x - cx) / scale;
+            const ny = -(y - cy) / scale;
+
+            const equation = Math.pow(nx*nx + ny*ny - 1, 3) - nx*nx * Math.pow(ny, 3);
+            return equation <= 0;
+        }
+
+        function drawMatrix() {
+            if(s1.style.visibility === 'hidden') return; 
+            
+            mCtx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+            mCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+            mCtx.font = fontSize + 'px Courier New';
+
+            for (let i = 0; i < drops.length; i++) {
+                const x = i * fontSize;
+                const y = Math.floor(drops[i]) * fontSize;
+                const text = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+                const heartMatch = isInsideHeart(x, y);
+
+                if (currentPhase === 3 && heartMatch) {
+                    mCtx.fillStyle = '#ff66b2';
+                    mCtx.shadowBlur = 15;
+                    mCtx.shadowColor = '#ff007f';
+                    mCtx.fillText(text, x, y);
+                    heartPositions.add(`${i},${Math.floor(drops[i])}`);
+                } else {
+                    mCtx.shadowBlur = 0; 
+                    mCtx.fillStyle = (Math.random() > 0.98) ? '#fff' : '#ff007f';
+                    mCtx.fillText(text, x, y);
+
+                    drops[i] += speeds[i];
+                    if (y > matrixCanvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                }
+            }
+            requestAnimationFrame(drawMatrix);
+        }
+
+        // --- CHRONOLOGICAL TIMELINE CONTROLLER ---
+        const countdownEl = document.getElementById('countdown');
+        const line1 = document.getElementById('line1');
+        const line2 = document.getElementById('line2');
+        const line3 = document.getElementById('line3');
+
+        function typeWriter(text, element, delay, callback) {
+            element.style.opacity = "1";
+            element.classList.add('typing');
+            let i = 0;
+            
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, delay);
+                } else {
+                    element.classList.remove('typing');
+                    if (callback) callback();
+                }
+            }
+            type();
+        }
+
+        function startSequence() {
+            let count = 1;
+            countdownEl.innerText = count;
+            
+            let countdownInterval = setInterval(() => {
+                count++;
+                if (count <= 3) {
+                    countdownEl.innerText = count;
+                } else {
+                    clearInterval(countdownInterval);
+                    countdownEl.style.opacity = "0";
+                    
+                    setTimeout(() => {
+                        countdownEl.style.display = "none";
+                        currentPhase = 2;
+                        startTextReveal();
+                    }, 400);
+                }
+            }, 1000);
+        }
+
+        function startTextReveal() {
+            typeWriter("HAPPY BIRTHDAY", line1, 100, () => {
+                setTimeout(() => {
+                    typeWriter("TO", line2, 120, () => {
+                        setTimeout(() => {
+                            typeWriter("Hobee Manal", line3, 100, () => {
+                                setTimeout(() => {
+                                    currentPhase = 3; 
+                                    setTimeout(transitionToGalaxy, 100);
+                                }, 1000);
+                            });
+                        }, 400);
+                    });
+                }, 400);
+            });
+        }
+
+        // --- GALAXY BACKGROUND ENGINE ---
+        const galaxyCanvas = document.getElementById('galaxyCanvas');
+        const gCtx = galaxyCanvas.getContext('2d');
+        let stars = [];
+        let formHeartShape = false; 
+        let heartPulseAngle = 0; 
+
+        function resizeGalaxyCanvas() {
+            galaxyCanvas.width = window.innerWidth;
+            galaxyCanvas.height = window.innerHeight;
+        }
+
+        function initGalaxy() {
+            resizeGalaxyCanvas();
+            window.addEventListener('resize', resizeGalaxyCanvas);
+            
+            stars = [];
+            const totalStars = 350; 
+            for (let i = 0; i < totalStars; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                stars.push({
+                    x: Math.random() * galaxyCanvas.width,
+                    y: Math.random() * galaxyCanvas.height,
+                    origX: Math.random() * galaxyCanvas.width,
+                    origY: Math.random() * galaxyCanvas.height,
+                    size: 1 + Math.random() * 2,
+                    color: ['#fff', '#ffd700', '#ff80df', '#ff007f'][Math.floor(Math.random() * 4)],
+                    blinkSpeed: 0.01 + Math.random() * 0.03,
+                    alpha: Math.random(),
+                    speedY: 0.05 + Math.random() * 0.05,
+                    heartAngle: angle 
+                });
+            }
+            drawGalaxy();
+        }
+
+        function drawGalaxy() {
+            if(s2.style.visibility === 'hidden') return;
+
+            gCtx.fillStyle = 'rgba(5, 1, 18, 0.2)'; 
+            gCtx.fillRect(0, 0, galaxyCanvas.width, galaxyCanvas.height);
+
+            let pulseScale = 1;
+            if (formHeartShape) {
+                heartPulseAngle += 0.04;
+                pulseScale = 1 + Math.sin(heartPulseAngle) * 0.05; 
+            }
+
+            stars.forEach(star => {
+                star.alpha += star.blinkSpeed;
+                if (star.alpha > 1 || star.alpha < 0) {
+                    star.blinkSpeed = -star.blinkSpeed;
+                }
+
+                if (formHeartShape) {
+                    const cx = galaxyCanvas.width / 2;
+                    const cy = galaxyCanvas.height * 0.45;
+                    const sizeFactor = Math.min(galaxyCanvas.width, galaxyCanvas.height) * 0.022 * pulseScale; 
+
+                    let t = star.heartAngle;
+                    let targetX = cx + 16 * Math.pow(Math.sin(t), 3) * sizeFactor;
+                    let targetY = cy - (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * sizeFactor;
+
+                    star.x += (targetX - star.x) * 0.05;
+                    star.y += (targetY - star.y) * 0.05;
+                    
+                    if(Math.random() > 0.95) star.color = '#ff007f';
+                } else {
+                    star.y += star.speedY;
+                    if (star.y > galaxyCanvas.height) {
+                        star.y = 0;
+                        star.x = Math.random() * galaxyCanvas.width;
+                    }
+                }
+
+                gCtx.save();
+                gCtx.globalAlpha = Math.abs(star.alpha);
+                gCtx.fillStyle = star.color;
+                gCtx.beginPath();
+                gCtx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                gCtx.fill();
+                gCtx.restore();
+            });
+
+            requestAnimationFrame(drawGalaxy);
+        }
+
+        // --- PHOTO INTERACTION ALBUM SYSTEM ---
+        const albumModal = document.getElementById('albumModal');
+        const mainAlbumContainer = document.getElementById('mainAlbumContainer');
+        let cards = [];
+        let currentCardIndex = 0;
+
+        function openAlbum() {
+            albumModal.classList.add('active');
+            galaxyUi.style.opacity = '0'; 
+            cards = Array.from(document.querySelectorAll('.photo-card'));
+            cards.forEach(card => card.classList.remove('hidden'));
+            currentCardIndex = 0;
+            
+            formHeartShape = false;
+            mainAlbumContainer.style.opacity = '1';
+            mainAlbumContainer.style.pointerEvents = 'auto';
+            
+            // إخفاء النص عند فتح الألبوم مجدداً لإعادة التشغيل بشكل صحيح
+            heartMessage.style.opacity = '0';
+            heartMessage.style.transform = 'scale(0.5)';
+        }
+
+        function handleClose(event) {
+            if (event) event.stopPropagation(); 
+            
+            mainAlbumContainer.style.opacity = '0';
+            mainAlbumContainer.style.pointerEvents = 'none';
+            document.querySelector('.close-album').style.opacity = '0';
+            
+            setTimeout(() => {
+                albumModal.classList.remove('active');
+                document.querySelector('.close-album').style.opacity = '1';
+                
+                formHeartShape = true;
+                
+                // 4. إظهار جملة "Kanbgheek Abnty souhaila" بالتزامن مع تجمع القلب الكوني بأنيميشن رائع
+                setTimeout(() => {
+                    heartMessage.style.opacity = '1';
+                    heartMessage.style.transform = 'scale(1)';
+                }, 800); // تأخير بسيط حتى تبدأ النجوم في رسم ملامح القلب أولاً
+            }, 400);
+        }
+
+        function nextPhoto() {
+            if (currentCardIndex < cards.length - 1) {
+                cards[currentCardIndex].classList.add('hidden');
+                currentCardIndex++;
+            } else {
+                handleClose(event);
+            }
+        }
+
+        // بدء تشغيل الأنظمة
+        drawMatrix();
+        setTimeout(startSequence, 500);
+    </script>
+</body>
+</html>
